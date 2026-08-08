@@ -1,0 +1,37 @@
+name: Build PDF
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Compile main.tex (XeLaTeX + Biber)
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: main.tex
+          latexmk_use_xelatex: true
+
+      - name: Upload proposal PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: proposal-pdf
+          path: main.pdf
+
+      - name: Compile example/example.tex (XeLaTeX + Biber)
+        uses: xu-cheng/latex-action@v3
+        with:
+          root_file: example.tex
+          working_directory: example
+          latexmk_use_xelatex: true
+
+      - name: Upload example PDF
+        uses: actions/upload-artifact@v4
+        with:
+          name: example-pdf
+          path: example/example.pdf

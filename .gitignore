@@ -1,0 +1,17 @@
+# Артефакти компіляції LaTeX
+*.aux
+*.log
+*.bbl
+*.bcf
+*.out
+*.run.xml
+*.synctex.gz
+*.fdb_latexmk
+*.fls
+*.toc
+*.blg
+*.xdv
+*.pdf
+!example/example.pdf
+
+.DS_Store

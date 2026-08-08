@@ -1,0 +1,116 @@
+% !TeX program = xelatex
+% ==========================================================================
+% EXAMPLE of a filled-in proposal. Fictional project, fictional students.
+% Demonstrates the expected level of detail: a concrete problem, sources,
+% named datasets, concrete metrics and a baseline, a realistic plan.
+% ==========================================================================
+\documentclass[english]{ucuproposal}
+
+\projecttitle{UA-Digest: Abstractive Summarization of Ukrainian News}
+\projecttagline{Compact, factually accurate digests of Ukrainian news articles using a fine-tuned language model}
+
+\teammember[https://www.linkedin.com/in/ivan-petrenko]{Ivan Petrenko}
+\teammember{Olena Bondarenko}
+\teammember{Andrii Kovalenko}
+
+\mentor{Iryna Sydorenko}
+
+\track{engineering}
+
+\repo{} % no repository yet -- team hasn't set one up at this stage
+
+\proposaldate{2026-09-21}
+
+\begin{document}
+\maketitlepage
+
+\section{Problem and motivation}
+There are almost no tools for automatic news summarization in Ukrainian:
+available solutions either target English or use extractive methods that
+produce disjointed text. Ukrainian media publish hundreds of articles a
+day, and readers lack a quick way to get a compact, factually accurate
+digest. Existing browser extensions for other languages rely on
+extractive sentence selection, which tends to string together
+grammatically disconnected fragments and loses the narrative flow that
+readers expect from a lead paragraph. The project has practical value (a
+plugin for reading news) and research value (evaluating the quality of
+abstractive summarization for a low-resource, morphologically rich
+language where labeled summarization data is scarce).
+
+\section{Related work}
+Abstractive summarization is based on seq2seq architectures with an
+attention mechanism~\cite{vaswani2017attention}. BERT-based models and
+their distilled versions~\cite{devlin2019bert,sanh2019distilbert} show
+strong results for English but require adaptation for the morphologically
+rich Ukrainian language: subword tokenizers trained on English corpora
+fragment Ukrainian words far more aggressively, which hurts both training
+efficiency and generation fluency. ROUGE~\cite{lin2004rouge} remains the
+standard metric for evaluating summary quality, which we will supplement
+with a manual expert assessment of factual accuracy, since ROUGE alone
+does not penalize hallucinated facts that are lexically similar to the
+source text.
+
+\section{Data}
+The primary dataset is an open corpus of Ukrainian literary and
+journalistic prose~\cite{ukrlit2023}, supplemented with a manually
+collected set of \textasciitilde{}8\,000 ``article--headline+lead'' pairs
+from three public RSS feeds of Ukrainian news outlets (usage license to
+be confirmed with rights holders; for training we will use only articles
+under an open license or with permission for research use). We will
+deduplicate near-identical articles (syndicated wire content republished
+by multiple outlets) using MinHash on word shingles, and filter out
+articles shorter than 200 words, since these rarely contain enough
+content for a meaningful lead. Split: 80\,/\,10\,/\,10\% (train/val/test),
+stratified by outlet to avoid a single source dominating any one split.
+
+\section{Approach and methods}
+The base model is mT5-small, fine-tuned on the collected corpus using
+teacher forcing with a cross-entropy loss. We plan to compare two
+configurations: (1) direct fine-tuning of mT5-small, (2) mT5-small with
+an additional self-supervised adaptation stage on an unannotated
+Ukrainian corpus before fine-tuning. We use the Hugging Face Transformers
+library implementation as a base, adapting tokenization and the sampling
+scheme for Ukrainian. Training will use mixed-precision on a single GPU
+with gradient accumulation to reach an effective batch size of 32,
+early stopping on validation ROUGE-L, and beam search (beam size 4) at
+inference time to reduce repetition artifacts common in small
+fine-tuned models.
+
+\section{Evaluation}
+Metrics: ROUGE-1/2/L~\cite{lin2004rouge} against reference leads.
+Baseline: extractive LexRank and a plain first-two-sentences cutoff
+("lead-2"). Additionally, a manual evaluation of 50 random summaries by
+three independent assessors on a 1--5 scale (coherence, factual
+accuracy). We expect to beat the lead-2 baseline by at least 15\% on
+ROUGE-L and achieve an average factual accuracy score of
+\(\geq 4/5\). We will also report inter-annotator agreement (Krippendorff's
+alpha) for the manual scores, and inspect a sample of low-scoring outputs
+by hand to categorize the dominant failure modes (e.g. hallucinated
+numbers vs. dropped named entities).
+
+\section{Plan and risks}
+\begin{keyfacts}
+\textbf{Key numbers:} \textasciitilde{}8\,000 article pairs \textperiodcentered\ 2 model configurations \textperiodcentered\ 6 weeks to midterm
+\end{keyfacts}
+\textbf{Before midterm (6 weeks):} data collection and cleaning, basic
+mT5-small fine-tuning, first ROUGE run against the baseline.
+\textbf{Before the final (6 more weeks):} second model configuration,
+manual evaluation, a simple web deployment demo. \textbf{Risks:}
+(1) not enough high-quality annotated pairs -- plan B: expand the corpus
+with semi-automatic lead generation; (2) low summary quality from
+mT5-small -- plan B: switch to a distilled but larger model (mT5-base)
+if compute resources allow; (3) rights holders decline permission for a
+subset of the RSS-collected articles -- plan B: fall back to the open
+literary/journalistic corpus alone and treat the RSS set as an optional
+held-out evaluation sample rather than training data.
+
+\section{Contribution statement}
+\begin{contributions}
+  \contribution{Ivan Petrenko}{35\%}{data collection and preprocessing, EDA, manual annotation}
+  \contribution{Olena Bondarenko}{40\%}{model fine-tuning, experiments, hyperparameter tuning}
+  \contribution{Andrii Kovalenko}{25\%}{training infrastructure, web deployment demo, documentation}
+\end{contributions}
+
+\ucuprintbibliography
+
+\end{document}

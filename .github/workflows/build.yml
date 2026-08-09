@@ -11,6 +11,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Check example/ copies are in sync with root
+        run: |
+          diff ucuproposal.cls example/ucuproposal.cls
+          diff .latexmkrc example/.latexmkrc
+          diff -r assets example/assets
+
       - name: Compile main.tex (XeLaTeX + Biber)
         uses: xu-cheng/latex-action@v3
         with:
